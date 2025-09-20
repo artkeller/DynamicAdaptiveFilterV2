@@ -1,6 +1,8 @@
 #ifndef FILTER_COEFFICIENTS_H
 #define FILTER_COEFFICIENTS_H
 
+// Created: 20250920
+
 // Chebyshev Low-Pass FIR Koeffizienten, Cutoff = 0.1 * Nyquist, Ripple = 0.5 dB
 // Ordnung 1: 3 Taps
 const float chebyshev_lowpass_order1[] = {0.3000, 0.4000, 0.3000};
@@ -33,5 +35,6 @@ const float butterworth_lowpass_order3[] = {0.1200, 0.1400, 0.1900, 0.2600, 0.19
 
 // Notch-Filter für 50 Hz Brummen (5 Taps)
 const float notch_50hz[] = {0.05f, 0.25f, 0.4f, 0.25f, 0.05f};
+
 
 #endif
