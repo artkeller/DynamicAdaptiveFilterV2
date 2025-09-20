@@ -1,6 +1,6 @@
 #include <Wire.h>
 #include "DynamicAdaptiveFilterV2.h"
-#include "params_GMCT.h"
+#include "params/params_GMCT.h"
 #include <Adafruit_BME680.h>
 
 #define SLAVE_ADDRESS 0x08
@@ -76,4 +76,5 @@ void receiveEvent(int numBytes) {
     case 4: filter.updateThreshold(channel, value); break;
     case 5: filter.updateDeadTime(channel, value); break;
   }
+
 }
