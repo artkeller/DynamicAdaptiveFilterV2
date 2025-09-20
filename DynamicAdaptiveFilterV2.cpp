@@ -1,6 +1,6 @@
 #include "DynamicAdaptiveFilterV2.h"
 
-DynamicAdaptiveFilterV2::DynamicAdaptiveFilterV2(const std::vector<FilterConfig>& configs) {
+DynamicAdaptiveFilterV2::DynamicAdaptiveFilterV2(const std::vector<FilterConfig>& configs) : _configs(configs) {
   _filters.resize(configs.size());
   for (size_t i = 0; i < configs.size(); ++i) {
     initFilter(_filters[i], configs[i]);
@@ -26,13 +26,33 @@ void DynamicAdaptiveFilterV2::initFilter(FilterState& state, const FilterConfig&
   } else if (config.type == SMA) {
     initSMA(state, max(1, config.length));
   } else if (config.type == FIR) {
-    if (config.coeffs && config.numCoeffs > 0) {
-      initFIR(state, config.coeffs, config.numCoeffs);
-    } else {
-      Serial.println("Error: FIR requires coeffs");
-      while (true);
-    }
+    initFIR(state, config.coeffs, config.numCoeffs);
   }
+#if defined(USE_KALMAN)
+  else if (config.type == KALMAN) {
+    state.P = 1.0f;
+    state.x = config.initialState;
+  }
+#endif
+#if defined(USE_LMS)
+  else if (config.type == LMS) {
+    for (int i = 0; i < config.length; i++) {
+      state.coeffs[i] = 0.0f;
+      state.inputBuffer[i] = 0.0f;
+    }
+    state.bufferIndex = 0;
+  }
+#endif
+#if defined(USE_RLS)
+  else if (config.type == RLS) {
+    for (int i = 0; i < config.length; i++) {
+      state.coeffs[i] = 0.0f;
+      state.inputBuffer[i] = 0.0f;
+    }
+    state.bufferIndex = 0;
+    state.P = 1.0f;
+  }
+#endif
 }
 
 void DynamicAdaptiveFilterV2::initSMA(FilterState& state, int length) {
@@ -53,14 +73,15 @@ void DynamicAdaptiveFilterV2::initFIR(FilterState& state, const float* coeffs, i
 }
 
 void DynamicAdaptiveFilterV2::pushSensorData(const SensorData& data) {
-  _sensorId = data.sensorId;
   if (data.values.size() != _filters.size()) {
     Serial.println("Error: Mismatch in number of values and filters");
     return;
   }
+  _sensorId = data.sensorId;
   unsigned long currentTime = data.timestamp;
   for (size_t i = 0; i < _filters.size(); ++i) {
     FilterState& state = _filters[i];
+    const FilterConfig& config = _configs[i];
     if (state.mode == COUNT_MODE && data.values[i] == 1.0f) {
       continue; // Pulse werden via onPulse() verarbeitet
     }
@@ -73,6 +94,28 @@ void DynamicAdaptiveFilterV2::pushSensorData(const SensorData& data) {
         if (state.type == SMA || state.type == FIR) {
           initializeHistory(state, data.values[i]);
         }
+#if defined(USE_KALMAN)
+        else if (state.type == KALMAN) {
+          state.x = data.values[i];
+          state.filteredValue = state.x;
+        }
+#endif
+#if defined(USE_LMS)
+        else if (state.type == LMS) {
+          for (int j = 0; j < config.length; j++) {
+            state.inputBuffer[j] = data.values[i];
+          }
+          state.filteredValue = data.values[i];
+        }
+#endif
+#if defined(USE_RLS)
+        else if (state.type == RLS) {
+          for (int j = 0; j < config.length; j++) {
+            state.inputBuffer[j] = data.values[i];
+          }
+          state.filteredValue = data.values[i];
+        }
+#endif
         state.lastPushTime = currentTime;
       }
       continue;
@@ -88,6 +131,53 @@ void DynamicAdaptiveFilterV2::pushSensorData(const SensorData& data) {
       pushToHistory(state, data.values[i]);
       updateSMAorFIR(state, decayFactor);
     }
+#if defined(USE_KALMAN)
+    else if (state.type == KALMAN) {
+      // Vorhersage
+      float x_pred = state.x; // Einfaches Modell (konstant)
+      float P_pred = state.P + config.Q;
+      // Korrektur
+      float K = P_pred / (P_pred + config.R);
+      state.x = x_pred + K * (data.values[i] - x_pred);
+      state.P = (1 - K) * P_pred;
+      // Adaptiv: R anpassen
+      float error = data.values[i] - state.x;
+      config.R = 0.99f * config.R + 0.01f * error * error;
+      state.filteredValue = state.x;
+    }
+#endif
+#if defined(USE_LMS)
+    else if (state.type == LMS) {
+      state.inputBuffer[state.bufferIndex] = data.values[i];
+      state.bufferIndex = (state.bufferIndex + 1) % config.length;
+      float output = 0.0f;
+      for (int j = 0; j < config.length; j++) {
+        output += state.coeffs[j] * state.inputBuffer[(state.bufferIndex + j) % config.length];
+      }
+      float error = data.values[i] - output; // Selbst-adaptive Annahme
+      for (int j = 0; j < config.length; j++) {
+        state.coeffs[j] += config.mu * error * state.inputBuffer[(state.bufferIndex + j) % config.length];
+      }
+      state.filteredValue = output;
+    }
+#endif
+#if defined(USE_RLS)
+    else if (state.type == RLS) {
+      state.inputBuffer[state.bufferIndex] = data.values[i];
+      state.bufferIndex = (state.bufferIndex + 1) % config.length;
+      float output = 0.0f;
+      for (int j = 0; j < config.length; j++) {
+        output += state.coeffs[j] * state.inputBuffer[(state.bufferIndex + j) % config.length];
+      }
+      float error = data.values[i] - output;
+      float gain = state.P / (config.lambda + state.P);
+      for (int j = 0; j < config.length; j++) {
+        state.coeffs[j] += gain * error * state.inputBuffer[(state.bufferIndex + j) % config.length];
+      }
+      state.P = (state.P - gain * state.P) / config.lambda;
+      state.filteredValue = output;
+    }
+#endif
     state.lastPushTime = currentTime;
   }
 }
@@ -104,7 +194,7 @@ void DynamicAdaptiveFilterV2::onPulse(int channel) {
   if (channel >= (int)_filters.size() || _filters[channel].mode != COUNT_MODE) return;
   static unsigned long lastPulse[4] = {0}; // Unterstützt bis zu 4 Kanäle
   unsigned long now = micros();
-  if (now - lastPulse[channel] > 1000) {
+  if (now - lastPulse[channel] > state.deadTimeUs) {
     _filters[channel].pulseCount++;
     lastPulse[channel] = now;
   }
@@ -139,6 +229,25 @@ void DynamicAdaptiveFilterV2::updateLength(int channel, int length) {
   } else if (state.type == SMA) {
     initSMA(state, max(1, length));
   }
+#ifdef USE_LMS
+  else if (state.type == LMS) {
+    for (int i = 0; i < length; i++) {
+      state.coeffs[i] = 0.0f;
+      state.inputBuffer[i] = 0.0f;
+    }
+    state.bufferIndex = 0;
+  }
+#endif
+#ifdef USE_RLS
+  else if (state.type == RLS) {
+    for (int i = 0; i < length; i++) {
+      state.coeffs[i] = 0.0f;
+      state.inputBuffer[i] = 0.0f;
+    }
+    state.bufferIndex = 0;
+    state.P = 1.0f;
+  }
+#endif
 }
 
 void DynamicAdaptiveFilterV2::updateFIRCoeffs(int channel, const float* coeffs, int numCoeffs) {
