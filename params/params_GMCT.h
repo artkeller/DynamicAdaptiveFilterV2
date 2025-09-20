@@ -3,7 +3,7 @@
 
 #include "DynamicAdaptiveFilterV2.h"
 
-// Struktur für GM-Rohr-Parameter
+// Struktur für GM-Zählrohr-Parameter
 struct GMCT_Params {
   float deadTimeUs;                // Dead Time in Mikrosekunden
   float cpmToMicroSvPerHour;       // Konversionsfaktor CPM zu µSv/h
@@ -12,7 +12,7 @@ struct GMCT_Params {
   int recommendedLength;            // Empfohlene Filterlänge
 };
 
-// Definitionen für gängige GM-Rohre
+// Definitionen für gängige GM-Zählrohre
 const GMCT_Params GMCT_SBM20 = {
   100.0f,         // Dead Time: 100 µs
   1.0f / 220.0f,  // 220 CPM = 1 µSv/h
@@ -45,7 +45,7 @@ const GMCT_Params GMCT_LND712 = {
   8               // EMA-Länge: 8
 };
 
-// Filterkonfigurationen für GM-Rohre
+// Filterkonfigurationen für GM-Zählrohre
 const std::vector<FilterConfig> filter_sbm20 = {
   {EMA, GMCT_SBM20.recommendedLength, nullptr, 0, GMCT_SBM20.recommendedNormalFreqHz, 10000, 1000, GMCT_SBM20.recommendedThresholdPercent, 0.0f, VALUE_MODE}, // CPM
   {EMA, GMCT_SBM20.recommendedLength, nullptr, 0, GMCT_SBM20.recommendedNormalFreqHz, 10000, 1000, GMCT_SBM20.recommendedThresholdPercent, 0.0f, VALUE_MODE}  // µSv/h
@@ -65,5 +65,6 @@ const std::vector<FilterConfig> filter_lnd712 = {
   {EMA, GMCT_LND712.recommendedLength, nullptr, 0, GMCT_LND712.recommendedNormalFreqHz, 10000, 1000, GMCT_LND712.recommendedThresholdPercent, 0.0f, VALUE_MODE}, // CPM
   {EMA, GMCT_LND712.recommendedLength, nullptr, 0, GMCT_LND712.recommendedNormalFreqHz, 10000, 1000, GMCT_LND712.recommendedThresholdPercent, 0.0f, VALUE_MODE}  // µSv/h
 };
+
 
 #endif
