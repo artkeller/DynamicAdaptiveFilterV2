@@ -1,5 +1,5 @@
 #include "DynamicAdaptiveFilterV2.h"
-#include "params_analog.h"
+#include "params/params_analog.h"
 
 // Poti4: GPIO19, Threshold 2 %, EMA, Länge 10, 10 Hz, Decay 1 h, Warm-up 1 s
 FILTER_ANALOG(19, 2.0f, EMA, 10, 10.0f, 3600000, 1000);
@@ -31,4 +31,5 @@ void loop() {
     Serial.printf("Poti4: Raw = %.1f%%, Filtered = %.1f%%\n", potiValue, filtered[0]);
     lastPrint = millis();
   }
+
 }
