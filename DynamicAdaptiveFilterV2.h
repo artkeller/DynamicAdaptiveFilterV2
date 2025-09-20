@@ -5,11 +5,31 @@
 #include <vector>
 #include <string>
 
+// Makro-Logik: Verhindere Kombinationen von Kalman, LMS und RLS
+#if defined(USE_KALMAN) && defined(USE_LMS)
+#error "Cannot use KALMAN and LMS together"
+#endif
+#if defined(USE_KALMAN) && defined(USE_RLS)
+#error "Cannot use KALMAN and RLS together"
+#endif
+#if defined(USE_LMS) && defined(USE_RLS)
+#error "Cannot use LMS and RLS together"
+#endif
+
 // Filtertypen
 enum FilterType {
   EMA,  // Exponential Moving Average
   SMA,  // Simple Moving Average
   FIR   // Finite Impulse Response
+#if defined(USE_KALMAN)
+  , KALMAN
+#endif
+#if defined(USE_LMS)
+  , LMS
+#endif
+#if defined(USE_RLS)
+  , RLS
+#endif
 };
 
 // Filtermodi
@@ -30,6 +50,17 @@ struct FilterConfig {
   float thresholdPercent;       // Schmitt-Trigger-Threshold (%)
   float deadTimeUs;             // Dead Time (µs, für COUNT_MODE)
   FilterMode mode;              // VALUE_MODE oder COUNT_MODE
+#if defined(USE_KALMAN)
+  float Q;                      // Prozessrauschen
+  float R;                      // Messrauschen
+  float initialState;           // Initialzustand
+#endif
+#if defined(USE_LMS)
+  float mu;                     // Lernrate
+#endif
+#if defined(USE_RLS)
+  float lambda;                 // Forget-Factor
+#endif
 };
 
 // Sensor-Datenstruktur
@@ -68,22 +99,37 @@ private:
     unsigned long expectedIntervalMs;
     unsigned long maxDecayTimeMs;
     unsigned long warmUpTimeMs;
-    float thresholdPercent;
-    float deadTimeUs;
-    FilterMode mode;
     unsigned long startTime;
     unsigned long lastPushTime;
     float filteredValue;  // Für EMA
     float baseAlpha;      // Für EMA
+    float thresholdPercent;
+    float deadTimeUs;
+    FilterMode mode;
     std::vector<float> history;  // Für SMA/FIR
     std::vector<float> baseCoeffs;  // Für SMA/FIR
     volatile unsigned long pulseCount;  // Für COUNT_MODE
+#if defined(USE_KALMAN)
+    float P;              // Kovarianz
+    float x;              // Zustand
+#endif
+#if defined(USE_LMS)
+    float coeffs[MAX_FILTER_LENGTH];
+    float inputBuffer[MAX_FILTER_LENGTH];
+    int bufferIndex;
+#endif
+#if defined(USE_RLS)
+    float coeffs[MAX_FILTER_LENGTH];
+    float inputBuffer[MAX_FILTER_LENGTH];
+    int bufferIndex;
+    float P;              // Kovarianz
+#endif
   };
 
   std::vector<FilterState> _filters;  // Eine pro Kanal
+  std::vector<FilterConfig> _configs; // Gespeicherte Konfigurationen
   String _sensorId;  // Sensor-ID aus letztem pushSensorData
 
-  void initFilter(FilterState& state, const FilterConfig& config);
   void initSMA(FilterState& state, int length);
   void initFIR(FilterState& state, const float* coeffs, int numCoeffs);
   float calculateDecayFactor(const FilterState& state, unsigned long deltaT) const;
