@@ -1,5 +1,5 @@
 #include "DynamicAdaptiveFilterV2.h"
-#include "params_analog.h"
+#include "params/params_analog.h"
 
 // Filter für Poti4 (GPIO19)
 FILTER_ANALOG(19, 2.0f, EMA, 10, nullptr, 0, 10.0f, 3600000, 1000);
@@ -44,4 +44,5 @@ void loop() {
                   potiValue, filtered[0], vbusValue, filtered[1]);
     lastPrint = millis();
   }
+
 }
