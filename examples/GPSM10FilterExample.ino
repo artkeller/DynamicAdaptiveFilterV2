@@ -1,7 +1,7 @@
 #include <HardwareSerial.h>
 #include <TinyGPS++.h>
 #include "DynamicAdaptiveFilterV2.h"
-#include "FIR_coefficients" // chebyshev filter für FIR-Position, bessel filter für FIR-Geschwindigkeit und Richtung
+#include "filter/FIR_coefficients" // chebyshev filter für FIR-Position, bessel filter für FIR-Geschwindigkeit und Richtung
 
 #define SLAVE_ADDRESS 0x08
 #define GPS_RX 16
@@ -81,3 +81,4 @@ void receiveEvent(int numBytes) {
   }
 
 }
+
