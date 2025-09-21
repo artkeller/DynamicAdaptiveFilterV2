@@ -62,10 +62,10 @@ wobei $0 < \alpha \le 1$ die Glättungs-Konstante ist.
 
 **Vor-/Nachteile:**
 
-* * Einfach, wenig Speicher
-* * Einfach zu konfigurieren (über `length`)
-* * Kein linearer Phasengang (bei manchen Systemen ohne Bedeutung)
-* * Kann kurzfristige periodische Störungen nicht gezielt herausfiltern (keine Notch/Brumm-Unterdrückung)
+* Einfach, wenig Speicher
+* Einfach zu konfigurieren (über `length`)
+* Kein linearer Phasengang (bei manchen Systemen ohne Bedeutung)
+* Kann kurzfristige periodische Störungen nicht gezielt herausfiltern (keine Notch/Brumm-Unterdrückung)
 
 ---
 
@@ -95,10 +95,10 @@ $y_n = \frac{1}{N} \sum_{k=0}^{N-1} x_{n-k}$
 
 **Vor-/Nachteile:**
 
-* * Stabil, deterministisch
-* * Kein Tuning mit Lernraten nötig
-* * Verzögerung proportional zu Fenstergröße
-* * Nicht geeignet zur selektiven Unterdrückung einer bestimmten Frequenz (z. B. 50Hz-Brumm)
+* Stabil, deterministisch
+* Kein Tuning mit Lernraten nötig
+* Verzögerung proportional zu Fenstergröße
+* Nicht geeignet zur selektiven Unterdrückung einer bestimmten Frequenz (z. B. 50Hz-Brumm)
 
 ---
 
@@ -132,10 +132,10 @@ wobei `b_k` die Filterkoeffizienten sind und `M = numCoeffs`.
 
 **Vor-/Nachteile:**
 
-* * Vorhersehbares Verhalten, kein Stabilitätsproblem wie bei IIR
-* * Linearphasige Varianten möglich
-* * Rechen- und Speicheraufwand steigt mit Anzahl Koeffizienten
-* * Latenz (wichtig bei Steuerungs-Anwendungen)
+* Vorhersehbares Verhalten, kein Stabilitätsproblem wie bei IIR
+* Linearphasige Varianten möglich
+* Rechen- und Speicheraufwand steigt mit Anzahl Koeffizienten
+* Latenz (wichtig bei Steuerungs-Anwendungen)
 
 ---
 
@@ -177,10 +177,10 @@ Kalman ist optimal (im quadratischen Sinn) für lineare Systeme mit Gaußschem R
 
 **Vor-/Nachteile:**
 
-* * Sehr leistungsfähig bei kombinierter Modell-/Messdatenfusion
-* * Geringe Verzögerung gegenüber gleitenden Mittelwerten
-* * Modellabhängig: schlechtes Modell → schlechte Schätzung
-* * Mathematisch anspruchsvoller (State-Transition, Multi-Dimension erfordert Matrizen)
+* Sehr leistungsfähig bei kombinierter Modell-/Messdatenfusion
+* Geringe Verzögerung gegenüber gleitenden Mittelwerten
+* Modellabhängig: schlechtes Modell → schlechte Schätzung
+* Mathematisch anspruchsvoller (State-Transition, Multi-Dimension erfordert Matrizen)
 
 ---
 
@@ -211,10 +211,10 @@ wobei `e_k = d_k - y_k` (Fehler zwischen gewünschtem Ziel `d_k` und aktuellem F
 
 **Vor-/Nachteile:**
 
-* * Passt sich an veränderliche Störprofile an
-* * Einfach zu implementieren
-* * Braucht Referenz/Fehlerberechnung oder kluge Struktur
-* * Kann langsam konvergieren (abhängig von `mu`)
+* Passt sich an veränderliche Störprofile an
+* Einfach zu implementieren
+* Braucht Referenz/Fehlerberechnung oder kluge Struktur
+* Kann langsam konvergieren (abhängig von `mu`)
 
 ---
 
@@ -239,9 +239,9 @@ wobei `e_k = d_k - y_k` (Fehler zwischen gewünschtem Ziel `d_k` und aktuellem F
 
 **Vor-/Nachteile:**
 
-* * Sehr schnelle Konvergenz
-* * Besser für nicht-stationäre Umgebungen
-* * Höherer Rechenaufwand und numerische Stabilitätsfragen
+* Sehr schnelle Konvergenz
+* Besser für nicht-stationäre Umgebungen
+* Höherer Rechenaufwand und numerische Stabilitätsfragen
 
 ---
 
