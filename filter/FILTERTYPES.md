@@ -416,5 +416,3 @@ Die Bibliothek berücksichtigt unregelmäßige Abtastraten durch `calculateDecay
 * Adaptive Filter / LMS / RLS Tutorials (z. B. Haykin: Adaptive Filter Theory)
 
 ---
-
-*Ende des Dokuments. Wenn du möchtest, kann ich dieses Dokument in eine gekürzte Cheat-Sheet-Version verwandeln oder konkrete Parameter für einzelne Sensoren (z. B. dein Geiger-Modell, spezifisches IMU-Setup) ausarbeiten.*
