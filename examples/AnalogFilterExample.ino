@@ -1,10 +1,20 @@
 #include "DynamicAdaptiveFilterV2.h"
 #include "params/params_analog.h"
 
-// Poti4: GPIO19, Threshold 2 %, EMA, Länge 10, 10 Hz, Decay 1 h, Warm-up 1 s
-FILTER_ANALOG(19, 2.0f, EMA, 10, 10.0f, 3600000, 1000);
+// Optional: Aktiviere LMS für Brummfilter
+//#define USE_LMS
 
-DynamicAdaptiveFilterV2 filter(filter_analog_19); // *** ATTN: to be adapted do V2
+// Poti4: GPIO19, Threshold 2 %, EMA, Länge 10, 10 Hz, Decay 1 h, Warm-up 1 s
+FILTER_ANALOG(19, 2.0f, EMA, 10, nullptr, 0, 10.0f, 3600000, 1000);
+
+#if defined(USE_LMS)
+const std::vector<FilterConfig> filter_lms = {
+  {LMS, 10, nullptr, 0, 100.0f, 10000, 1000, 5.0f, 0.0f, VALUE_MODE, 0.01f}
+};
+DynamicAdaptiveFilterV2 filter({filter_analog_19[0], filter_lms[0]});
+#else
+DynamicAdaptiveFilterV2 filter(filter_analog_19);
+#endif
 
 void setup() {
   Serial.begin(115200);
@@ -13,24 +23,23 @@ void setup() {
 }
 
 void loop() {
-  // Poti4 auslesen (0–4095, 12-bit ADC)
   int adcValue = analogRead(19);
   float potiValue = (adcValue / 4095.0f) * 100.0f; // Skaliere auf 0–100 %
 
-  // SensorData für Filter
   SensorData data;
-  data.values = {potiValue};
-  data.timestamp = millis();
-  data.sensorId = "POTI4";
-  filter.pushSensorData(data);
-
-  // Gefilterten Wert ausgeben
-  static unsigned long lastPrint = 0;
-  if (millis() - lastPrint >= 100) { // 10 Hz
+#if defined(USE_LMS)
+  data = {{potiValue, potiValue}, {0.0f, potiValue}, millis(), "POTI4"};
+#else
+  data = {{potiValue}, {}, millis(), "POTI4"};
+#endif
+  if (filter.pushSensorData(data)) {
     auto filtered = filter.getFilteredValues();
     Serial.printf("Poti4: Raw = %.1f%%, Filtered = %.1f%%\n", potiValue, filtered[0]);
-    lastPrint = millis();
+#if defined(USE_LMS)
+    Serial.printf("LMS: Filtered = %.1f%%\n", filtered[1]);
+#endif
   }
 
+  delay(100); // 10 Hz
 }
 
