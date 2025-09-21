@@ -1,8 +1,6 @@
 # DynamicAdaptiveFilterV2 *** IN PROGRESS --- EXAMPLES BELONG TO EARLIER VERSION ****
-DynamicAdaptiveFilterV2 is a versatile Arduino library for filtering sensor data and analog signals with adaptive filters (EMA, SMA, FIR). It is suitable for applications such as environmental sensors (e.g., BME680, SHT31), potentiometers, and voltage measurements (e.g., Vbus/Vcc).
-
-**DynamicAdaptiveFilterV2** ist eine Arduino/C++ Bibliothek, die Sensordaten **in Echtzeit** filtert und glättet.  
-Sie ist ideal für Projekte, in denen **rauschbehaftete, unregelmäßige oder impulsartige Signale** verarbeitet werden müssen.
+DynamicAdaptiveFilterV2 is a versatile Arduino/C++ library for real-time filtering and smoothing of sensor data and analog signals.
+It supports adaptive filters such as EMA, SMA, and FIR and is ideal for projects that require processing of noisy, irregular, or impulse-like signals, e.g., environmental sensors (BME680, SHT31), potentiometers, or voltage measurements (Vbus/Vcc).
 
 ## 🌍 Typische Anwendungsfälle
 - **Umweltsensoren**: Temperatur, Feuchtigkeit, Luftqualität  
