@@ -48,7 +48,7 @@ Damit kannst du Signale automatisch optimieren, **ohne dich tief in DSP (Digital
    #include "DynamicAdaptiveFilterV2.h"
 ```
 
-4. Stelle sicher, dass deine Entwicklungsumgebung `vector` und `string` unterstützt.
+4. Stelle sicher, dass deine Entwicklungsumgebung `vector` und `string` unterstützt. (**AVR-Boards** not adapted yet)
 
 ---
 
