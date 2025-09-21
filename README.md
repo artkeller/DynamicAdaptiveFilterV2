@@ -219,16 +219,29 @@ void loop() {
 ## 📖 Projektstruktur
 
 ```
+
+
 DynamicAdaptiveFilterV2/
-├── DynamicAdaptiveFilterV2.cpp       # Hauptimplementierung
-├── DynamicAdaptiveFilterV2.h         # Header-Datei
-├── filter_coefficients.h             # Vordefinierte FIR-Koeffizienten
-├── README.md                          # Diese Datei
-├── filter.md                          # Detaillierte Filterbeschreibung
-├── FILTERTYPES.md                     # Theorie der Filtertypen
-├── FILTERCOEFFS.md                     # Theorie der FIR-Koeffizienten
-├── params.md                          # Vordefinierte Alltagsszenarien
-└── examples/                          # Beispiel-Sketches
+├── DynamicAdaptiveFilterV2.cpp        # Hauptimplementierung
+├── DynamicAdaptiveFilterV2.h          # Header-Datei
+├── README.md                          # Hauptdokumentation
+├── filter/                             # Filter
+│   ├── FIR\_coefficients.h              # Vordefinierte FIR-Koeffizienten
+│   ├── FILTER.md                       # Detaillierte Filterbeschreibung
+│   ├── FILTERTYPES.md                  # Theorie der Filtertypen
+│   └── FILTERCOEFFS.md                 # Theorie der FIR-Koeffizienten
+├── params/                             # Vordefinierte Parameter
+│   ├── params\_GMCT.h                   # Parameter für Geiger-Müller-Zählrohre
+│   ├── params\_analog.h                 # Parameter für ADC-Anwendungen
+│   ├── params\_sensors.h                # Parameter für gängige Sensoren
+│   └── PARAMS.md                       # Beschreibung der Alltagsszenarien
+
+└── examples/                           # Beispiel-Sketches
+
+```
+```
+
+
 ```
 
 ---
