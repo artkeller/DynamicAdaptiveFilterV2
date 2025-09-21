@@ -8,7 +8,7 @@
 // Wähle Rohrtyp
 const GMCT_Params& gmType = GMCT_SBM20;  // Beispiel: SBM-20
 
-// Initialisiere Filter mit GM-Parametern
+// Initialisiere Filter mit GM-Parametern  // *** ATTN: to be adapted do V2
 DynamicAdaptiveFilter gmFilter(
   EMA, 
   gmType.recommendedLength,
@@ -60,4 +60,5 @@ void receiveEvent(int numBytes) {
     case 4: gmFilter.updateThreshold(value); break;
     case 5: gmFilter.updateDeadTime(value); break;
   }
+
 }
