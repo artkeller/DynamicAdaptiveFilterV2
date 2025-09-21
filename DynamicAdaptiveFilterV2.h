@@ -41,8 +41,8 @@ enum FilterMode {
 // Konfigurationsstruktur für jeden Messkanal
 struct FilterConfig {
   FilterType type;
-  int length;                    // Für EMA/SMA: Fensterlänge; FIR: Ignoriert
-  const float* coeffs;           // Für FIR: Koeffizienten
+  int length;                   // Für EMA/SMA: Fensterlänge; FIR: Ignoriert
+  const float* coeffs;          // Für FIR: Koeffizienten
   int numCoeffs;                // Für FIR: Anzahl Koeffizienten
   float normalFreqHz;           // Normale Frequenz (Hz)
   unsigned long maxDecayTimeMs; // Max. Decay-Zeit (ms)
@@ -67,7 +67,7 @@ struct FilterConfig {
 struct SensorData {
   std::vector<float> values;  // Messwerte (z.B. [Temp, Feuchte, Druck])
   unsigned long timestamp;    // Zeitstempel (millis())
-  String sensorId;           // Sensor-ID (z.B. "BME688")
+  String sensorId;            // Sensor-ID (z.B. "BME688")
 };
 
 class DynamicAdaptiveFilterV2 {
