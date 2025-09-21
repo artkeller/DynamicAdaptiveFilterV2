@@ -4,7 +4,7 @@
 // Poti4: GPIO19, Threshold 2 %, EMA, Länge 10, 10 Hz, Decay 1 h, Warm-up 1 s
 FILTER_ANALOG(19, 2.0f, EMA, 10, 10.0f, 3600000, 1000);
 
-DynamicAdaptiveFilterV2 filter(filter_analog_19);
+DynamicAdaptiveFilterV2 filter(filter_analog_19); // *** ATTN: to be adapted do V2
 
 void setup() {
   Serial.begin(115200);
@@ -33,3 +33,4 @@ void loop() {
   }
 
 }
+
