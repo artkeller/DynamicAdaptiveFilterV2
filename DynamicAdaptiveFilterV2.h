@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+#define MAX_FILTER_LENGTH 10 // Maximale Filterlänge für LMS/RLS
+
 // Makro-Logik: Verhindere Kombinationen von Kalman, LMS und RLS
 #if defined(USE_KALMAN) && defined(USE_LMS)
 #error "Cannot use KALMAN and LMS together"
@@ -65,21 +67,17 @@ struct FilterConfig {
 
 // Sensor-Datenstruktur
 struct SensorData {
-  std::vector<float> values;  // Messwerte (z.B. [Temp, Feuchte, Druck])
-  unsigned long timestamp;    // Zeitstempel (millis())
-  String sensorId;            // Sensor-ID (z.B. "BME688")
+  std::vector<float> values;     // Messwerte (z.B. [Temp, Feuchte, Druck])
+  std::vector<float> referenceValues; // Für LMS/RLS: Referenzsignal
+  unsigned long timestamp;      // Zeitstempel (millis())
+  String sensorId;              // Sensor-ID (z.B. "BME688")
 };
 
 class DynamicAdaptiveFilterV2 {
 public:
-  // Konstruktor: Akzeptiert Vektor von FilterConfigs für jeden Kanal
   DynamicAdaptiveFilterV2(const std::vector<FilterConfig>& configs);
-
-  // Methoden für Sensor-Daten
-  void pushSensorData(const SensorData& data);
+  bool pushSensorData(const SensorData& data); // Änderung: bool-Rückgabe
   std::vector<float> getFilteredValues() const;
-
-  // Dynamische Update-Methoden (pro Kanal)
   void updateNormalFreq(int channel, float normalFreqHz);
   void updateLength(int channel, int length);
   void updateFIRCoeffs(int channel, const float* coeffs, int numCoeffs);
@@ -87,10 +85,8 @@ public:
   void updateThreshold(int channel, float thresholdPercent);
   void updateDeadTime(int channel, float deadTimeUs);
   void updateMode(int channel, FilterMode mode);
-
-  // Für COUNT_MODE
-  void onPulse(int channel);  // Interrupt-Callback
-  unsigned long getCPM(int channel);  // CPM für GM-Zähler
+  void onPulse(int channel);
+  unsigned long getCPM(int channel);
 
 private:
   struct FilterState {
@@ -99,13 +95,13 @@ private:
     unsigned long expectedIntervalMs;
     unsigned long maxDecayTimeMs;
     unsigned long warmUpTimeMs;
+    float thresholdPercent;
+    float deadTimeUs;
+    FilterMode mode;
     unsigned long startTime;
     unsigned long lastPushTime;
     float filteredValue;  // Für EMA
     float baseAlpha;      // Für EMA
-    float thresholdPercent;
-    float deadTimeUs;
-    FilterMode mode;
     std::vector<float> history;  // Für SMA/FIR
     std::vector<float> baseCoeffs;  // Für SMA/FIR
     volatile unsigned long pulseCount;  // Für COUNT_MODE
@@ -126,10 +122,12 @@ private:
 #endif
   };
 
-  std::vector<FilterState> _filters;  // Eine pro Kanal
-  std::vector<FilterConfig> _configs; // Gespeicherte Konfigurationen
-  String _sensorId;  // Sensor-ID aus letztem pushSensorData
+  std::vector<FilterState> _filters;
+  std::vector<FilterConfig> _configs;
+  String _sensorId;
 
+  bool validateConfig(const FilterConfig& config); // Neu: Validierung
+  void initFilter(FilterState& state, const FilterConfig& config);
   void initSMA(FilterState& state, int length);
   void initFIR(FilterState& state, const float* coeffs, int numCoeffs);
   float calculateDecayFactor(const FilterState& state, unsigned long deltaT) const;
