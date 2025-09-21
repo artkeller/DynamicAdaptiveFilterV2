@@ -31,7 +31,7 @@ Damit kannst du Signale automatisch optimieren, **ohne dich tief in DSP (Digital
   - Filterkoeffizienten austauschen: `updateFIRCoeffs()`
   - Thresholds und Totzeiten ändern: `updateThreshold()`, `updateDeadTime()`
 - **Interrupts für COUNT_MODE** (z. B. Geiger-Müller-Pulse)
-- Kompatibel mit **Arduino**, **ESP32**, **RP2040**, **AVR-Boards** usw.
+- Kompatibel mit **Arduino**, **ESP32** (**RP2040** not tested, **AVR-Boards** not adapted yet) usw.
 
 ---
 
