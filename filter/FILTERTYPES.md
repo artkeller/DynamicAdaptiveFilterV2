@@ -2,7 +2,7 @@
 
 **Zielgruppe:** Entwickler mit grundlegenden Kenntnissen in Embedded-C++/Arduino; keine tiefgehende DSP-Vorkenntnis erforderlich.
 
-Nachfolgend werden die Filtertypen, die **DynamicAdaptiveFilterV2** unterstützt, ihre mathematische Basis, praktische Auswirkungen und wie die `FilterConfig`-Parameter das Verhalten steuern ausführlich erklärt. Der Fokus liegt auf konkreten Einsatzszenarien (Sensoren, Sound, GPS, IMU, Geiger-Müller-Zählrohr u.ä.).
+Nachfolgend werden die Filtertypen, die **DynamicAdaptiveFilterV2** unterstützt, ihre mathematische Basis, praktische Auswirkungen und wie die `FilterConfig`-Parameter das Verhalten steuern, ausführlich erklärt. Der Fokus liegt auf konkreten Einsatzszenarien (Sensoren, Sound, GPS, IMU, Geiger-Müller-Zählrohr u.ä.).
 
 ---
 
