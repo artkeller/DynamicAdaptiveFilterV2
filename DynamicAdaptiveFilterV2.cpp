@@ -1,14 +1,22 @@
 #include "DynamicAdaptiveFilterV2.h"
+#include <algorithm>
 
 DynamicAdaptiveFilterV2::DynamicAdaptiveFilterV2(const std::vector<FilterConfig>& configs) : _configs(configs) {
   _filters.resize(configs.size());
-  for (size_t i = 0; i < configs.size(); ++i) {
-    if (!validateConfig(configs[i])) {
-      Serial.println("Error: Invalid config for channel " + String(i));
+  // Initialisierung in begin() verschoben
+}
+
+void DynamicAdaptiveFilterV2::begin() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+  for (size_t i = 0; i < _configs.size(); ++i) {
+    if (!validateConfig(_configs[i])) {
+      digitalWrite(LED_BUILTIN, LOW); // Fehler anzeigen
       while (true); // Stoppe bei ungültiger Konfiguration
     }
-    initFilter(_filters[i], configs[i]);
+    initFilter(_filters[i], _configs[i]);
   }
+  digitalWrite(LED_BUILTIN, LOW); // Initialisierung erfolgreich
 }
 
 bool DynamicAdaptiveFilterV2::validateConfig(const FilterConfig& config) {
@@ -68,6 +76,9 @@ void DynamicAdaptiveFilterV2::initFilter(FilterState& state, const FilterConfig&
 #endif
 #if defined(USE_LMS)
   else if (config.type == LMS) {
+    if (config.mu <= 0) {
+      const_cast<FilterConfig&>(config).mu = 0.01f; // Fallback
+    }
     for (int i = 0; i < config.length; i++) {
       state.coeffs[i] = 0.0f;
       state.inputBuffer[i] = 0.0f;
@@ -77,6 +88,9 @@ void DynamicAdaptiveFilterV2::initFilter(FilterState& state, const FilterConfig&
 #endif
 #if defined(USE_RLS)
   else if (config.type == RLS) {
+    if (config.lambda <= 0 || config.lambda > 1) {
+      const_cast<FilterConfig&>(config).lambda = 0.9f; // Fallback
+    }
     for (int i = 0; i < config.length; i++) {
       state.coeffs[i] = 0.0f;
       state.inputBuffer[i] = 0.0f;
@@ -87,137 +101,120 @@ void DynamicAdaptiveFilterV2::initFilter(FilterState& state, const FilterConfig&
 #endif
 }
 
-void DynamicAdaptiveFilterV2::initSMA(FilterState& state, int length) {
-  state.baseCoeffs.resize(length, 1.0f / length);
-  state.history.clear();
-  state.history.reserve(length);
-}
+float DynamicAdaptiveFilterV2::calculateMAD(float* data, int windowSize) {
+  if (windowSize <= 0) return 0.0f;
 
-void DynamicAdaptiveFilterV2::initFIR(FilterState& state, const float* coeffs, int numCoeffs) {
-  state.baseCoeffs.assign(coeffs, coeffs + numCoeffs);
-  state.history.clear();
-  state.history.reserve(numCoeffs);
-  float sum = 0.0f;
-  for (int i = 0; i < numCoeffs; ++i) sum += state.baseCoeffs[i];
-  if (abs(sum - 1.0f) > 0.01f) {
-    Serial.println("Warning: FIR coeffs sum not ~1");
+  // Kopiere Daten
+  float* temp = new float[windowSize];
+  if (!temp) return 0.0f; // Speicherfehler
+  for (int i = 0; i < windowSize; i++) {
+    temp[i] = data[i];
   }
+
+  // Berechne Median
+  std::sort(temp, temp + windowSize);
+  float median = (windowSize % 2 == 0) ?
+    (temp[windowSize/2 - 1] + temp[windowSize/2]) / 2.0f :
+    temp[windowSize/2];
+
+  // Berechne absolute Abweichungen
+  for (int i = 0; i < windowSize; i++) {
+    temp[i] = abs(temp[i] - median);
+  }
+
+  // Berechne Median der Abweichungen
+  std::sort(temp, temp + windowSize);
+  float mad = (windowSize % 2 == 0) ?
+    (temp[windowSize/2 - 1] + temp[windowSize/2]) / 2.0f :
+    temp[windowSize/2];
+
+  delete[] temp;
+  return mad * 1.4826f; // Skalierungsfaktor
 }
 
 bool DynamicAdaptiveFilterV2::pushSensorData(const SensorData& data) {
-  if (data.values.size() != _filters.size()) {
-    Serial.println("Error: Mismatch in number of values and filters");
+  if (data.values.empty() || data.values.size() > _filters.size()) {
     return false;
   }
-#if defined(USE_LMS) || defined(USE_RLS)
-  if ((data.referenceValues.size() != 0 && data.referenceValues.size() != data.values.size())) {
-    Serial.println("Error: Mismatch in number of reference values and filters");
-    return false;
-  }
-#endif
-  _sensorId = data.sensorId;
-  unsigned long currentTime = data.timestamp;
-  for (size_t i = 0; i < _filters.size(); ++i) {
+
+  bool success = true;
+  for (size_t i = 0; i < data.values.size(); ++i) {
     FilterState& state = _filters[i];
     const FilterConfig& config = _configs[i];
-    if (state.mode == COUNT_MODE && data.values[i] == 1.0f) {
-      continue; // Pulse werden via onPulse() verarbeitet
-    }
-    if ((currentTime - state.startTime) < state.warmUpTimeMs) {
-      continue;
-    }
-    if (state.lastPushTime == 0 || !isSignificantChange(state, data.values[i])) {
-      if (state.lastPushTime == 0) {
-        state.filteredValue = data.values[i];
-        if (state.type == SMA || state.type == FIR) {
-          initializeHistory(state, data.values[i]);
-        }
-#if defined(USE_KALMAN)
-        else if (state.type == KALMAN) {
-          state.x = data.values[i];
-          state.filteredValue = state.x;
-        }
-#endif
-#if defined(USE_LMS)
-        else if (state.type == LMS) {
-          for (int j = 0; j < config.length; j++) {
-            state.inputBuffer[j] = data.values[i];
-          }
-          state.filteredValue = data.values[i];
-        }
-#endif
-#if defined(USE_RLS)
-        else if (state.type == RLS) {
-          for (int j = 0; j < config.length; j++) {
-            state.inputBuffer[j] = data.values[i];
-          }
-          state.filteredValue = data.values[i];
-        }
-#endif
-        state.lastPushTime = currentTime;
-      }
-      continue;
-    }
-    unsigned long deltaT = currentTime - state.lastPushTime;
-    if (deltaT < state.expectedIntervalMs / 2) {
-      continue;
-    }
+    unsigned long currentTime = data.timestamp == 0 ? millis() : data.timestamp;
+    unsigned long deltaT = currentTime > state.lastPushTime ? currentTime - state.lastPushTime : 0;
+    state.lastPushTime = currentTime;
+
     float decayFactor = calculateDecayFactor(state, deltaT);
-    if (state.type == EMA) {
-      updateEMA(state, data.values[i], decayFactor);
-    } else if (state.type == SMA || state.type == FIR) {
-      pushToHistory(state, data.values[i]);
+    float value = data.values[i];
+
+    if (state.mode == VALUE_MODE && !isSignificantChange(state, value)) {
+      continue;
+    }
+
+    if (state.mode == COUNT_MODE) {
+      if (micros() - state.lastPushTime * 1000UL < state.deadTimeUs) {
+        continue;
+      }
+      state.pulseCount++;
+      continue;
+    }
+
+    if (config.type == EMA) {
+      updateEMA(state, value, decayFactor);
+    } else if (config.type == SMA || config.type == FIR) {
+      pushToHistory(state, value);
       updateSMAorFIR(state, decayFactor);
     }
 #if defined(USE_KALMAN)
-    else if (state.type == KALMAN) {
-      float x_pred = state.x;
-      float P_pred = state.P + config.Q;
-      float K = P_pred / (P_pred + config.R);
-      state.x = x_pred + K * (data.values[i] - x_pred);
-      state.P = (1 - K) * P_pred;
+    else if (config.type == KALMAN) {
+      float K = state.P * (1.0f / (state.P + config.R));
+      state.x = state.x + K * (value - state.x);
+      state.P = (1.0f - K) * state.P + config.Q;
       state.filteredValue = state.x;
     }
 #endif
 #if defined(USE_LMS)
-    else if (state.type == LMS) {
-      state.inputBuffer[state.bufferIndex] = data.values[i];
-      state.bufferIndex = (state.bufferIndex + 1) % config.length;
+    else if (config.type == LMS) {
+      // MAD-basierte Ausreißererkennung
+      state.inputBuffer[state.bufferIndex] = value;
+      float mad = calculateMAD(state.inputBuffer, config.length);
+      float median = state.inputBuffer[config.length/2]; // Vereinfacht
+      if (abs(value - median) > config.madThreshold * mad) {
+        success = false; // Ausreißer ignorieren
+        continue;
+      }
+
+      // Dynamische mu-Anpassung
+      float dynamicMu = config.mu / (mad + 1e-6f);
+      dynamicMu = constrain(dynamicMu, 0.001f, 0.1f);
+
+      // LMS-Berechnung
       float output = 0.0f;
       for (int j = 0; j < config.length; j++) {
-        int idx = (state.bufferIndex - 1 - j + config.length) % config.length;
+        int idx = (state.bufferIndex - j - 1 + config.length) % config.length;
         output += state.coeffs[j] * state.inputBuffer[idx];
       }
-      float error = data.referenceValues.empty() ? data.values[i] - output : data.referenceValues[i] - output;
+      float error = value - output;
       for (int j = 0; j < config.length; j++) {
-        int idx = (state.bufferIndex - 1 - j + config.length) % config.length;
-        state.coeffs[j] += config.mu * error * state.inputBuffer[idx];
+        int idx = (state.bufferIndex - j - 1 + config.length) % config.length;
+        state.coeffs[j] += dynamicMu * error * state.inputBuffer[idx];
       }
       state.filteredValue = output;
+      state.inputBuffer[state.bufferIndex] = value;
+      state.bufferIndex = (state.bufferIndex + 1) % config.length;
     }
 #endif
 #if defined(USE_RLS)
-    else if (state.type == RLS) {
-      state.inputBuffer[state.bufferIndex] = data.values[i];
+    else if (config.type == RLS) {
+      // RLS-Implementierung (vereinfacht)
+      state.inputBuffer[state.bufferIndex] = value;
       state.bufferIndex = (state.bufferIndex + 1) % config.length;
-      float output = 0.0f;
-      for (int j = 0; j < config.length; j++) {
-        int idx = (state.bufferIndex - 1 - j + config.length) % config.length;
-        output += state.coeffs[j] * state.inputBuffer[idx];
-      }
-      float error = data.referenceValues.empty() ? data.values[i] - output : data.referenceValues[i] - output;
-      float gain = state.P / (config.lambda + state.P);
-      for (int j = 0; j < config.length; j++) {
-        int idx = (state.bufferIndex - 1 - j + config.length) % config.length;
-        state.coeffs[j] += gain * error * state.inputBuffer[idx];
-      }
-      state.P = (state.P - gain * state.P) / config.lambda;
-      state.filteredValue = output;
+      state.filteredValue = value; // Platzhalter
     }
 #endif
-    state.lastPushTime = currentTime;
   }
-  return true;
+  return success;
 }
 
 std::vector<float> DynamicAdaptiveFilterV2::getFilteredValues() const {
@@ -228,31 +225,6 @@ std::vector<float> DynamicAdaptiveFilterV2::getFilteredValues() const {
   return result;
 }
 
-void DynamicAdaptiveFilterV2::onPulse(int channel) {
-  if (channel >= (int)_filters.size() || _filters[channel].mode != COUNT_MODE) return;
-  static unsigned long lastPulse[4] = {0};
-  unsigned long now = micros();
-  if (now - lastPulse[channel] >= _configs[channel].deadTimeUs) { // Fix: _configs statt state
-    _filters[channel].pulseCount++;
-    lastPulse[channel] = now;
-  }
-}
-
-unsigned long DynamicAdaptiveFilterV2::getCPM(int channel) {
-  if (channel >= (int)_filters.size() || _filters[channel].mode != COUNT_MODE) return 0;
-  FilterState& state = _filters[channel];
-  static unsigned long lastInterval[4] = {0};
-  unsigned long now = millis();
-  if (now - lastInterval[channel] < 60000) return 0;
-  unsigned long cpm = state.pulseCount * (60000UL / (now - lastInterval[channel]));
-  state.pulseCount = 0;
-  lastInterval[channel] = now;
-  float cps = cpm / 60.0f;
-  float correctedCps = cps / (1.0f - cps * state.deadTimeUs * 1e-6f);
-  pushSensorData({{correctedCps}, {}, now, _sensorId});
-  return round(cpm);
-}
-
 void DynamicAdaptiveFilterV2::updateNormalFreq(int channel, float normalFreqHz) {
   if (channel >= (int)_filters.size()) return;
   _filters[channel].normalFreqHz = max(0.01f, normalFreqHz);
@@ -261,35 +233,10 @@ void DynamicAdaptiveFilterV2::updateNormalFreq(int channel, float normalFreqHz) 
 
 void DynamicAdaptiveFilterV2::updateLength(int channel, int length) {
   if (channel >= (int)_filters.size()) return;
-  FilterState& state = _filters[channel];
-  if (state.type == EMA) {
-    state.baseAlpha = 2.0f / (max(1, length) + 1.0f);
-  } else if (state.type == SMA) {
-    initSMA(state, max(1, length));
+  if (_filters[channel].type == EMA || _filters[channel].type == SMA) {
+    _filters[channel].baseAlpha = 2.0f / (max(1, length) + 1.0f);
+    initSMA(_filters[channel], max(1, length));
   }
-#if defined(USE_LMS)
-  else if (state.type == LMS) {
-    if (length <= MAX_FILTER_LENGTH && length >= 1) {
-      for (int i = 0; i < length; i++) {
-        state.coeffs[i] = 0.0f;
-        state.inputBuffer[i] = 0.0f;
-      }
-      state.bufferIndex = 0;
-    }
-  }
-#endif
-#if defined(USE_RLS)
-  else if (state.type == RLS) {
-    if (length <= MAX_FILTER_LENGTH && length >= 1) {
-      for (int i = 0; i < length; i++) {
-        state.coeffs[i] = 0.0f;
-        state.inputBuffer[i] = 0.0f;
-      }
-      state.bufferIndex = 0;
-      state.P = 1.0f;
-    }
-  }
-#endif
 }
 
 void DynamicAdaptiveFilterV2::updateFIRCoeffs(int channel, const float* coeffs, int numCoeffs) {
@@ -316,6 +263,17 @@ void DynamicAdaptiveFilterV2::updateMode(int channel, FilterMode mode) {
   if (channel >= (int)_filters.size()) return;
   _filters[channel].mode = mode;
   if (mode == COUNT_MODE) _filters[channel].warmUpTimeMs = max(_filters[channel].warmUpTimeMs, 60000UL);
+}
+
+void DynamicAdaptiveFilterV2::onPulse(int channel) {
+  if (channel >= (int)_filters.size()) return;
+  _filters[channel].pulseCount++;
+}
+
+unsigned long DynamicAdaptiveFilterV2::getCPM(int channel) {
+  if (channel >= (int)_filters.size()) return 0;
+  unsigned long deltaT = millis() - _filters[channel].startTime;
+  return _filters[channel].pulseCount * 60000UL / max(1UL, deltaT);
 }
 
 float DynamicAdaptiveFilterV2::calculateDecayFactor(const FilterState& state, unsigned long deltaT) const {
@@ -351,6 +309,16 @@ void DynamicAdaptiveFilterV2::updateSMAorFIR(FilterState& state, float decayFact
   if (sumScaled < 1.0f && histSize > 0) {
     state.filteredValue += (1.0f - sumScaled) * state.history.back();
   }
+}
+
+void DynamicAdaptiveFilterV2::initSMA(FilterState& state, int length) {
+  state.baseCoeffs.resize(length, 1.0f / length);
+  state.history.clear();
+}
+
+void DynamicAdaptiveFilterV2::initFIR(FilterState& state, const float* coeffs, int numCoeffs) {
+  state.baseCoeffs.assign(coeffs, coeffs + numCoeffs);
+  state.history.clear();
 }
 
 void DynamicAdaptiveFilterV2::pushToHistory(FilterState& state, float value) {
