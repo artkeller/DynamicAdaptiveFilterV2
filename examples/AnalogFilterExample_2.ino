@@ -2,7 +2,7 @@
 #include "params_analog.h"
 
 #define USE_LMS
-FILTER_ANALOG(1, 2.0f, LMS, 5, nullptr, 0, 10.0f, 3600000, 1000);
+FILTER_ANALOG(1, 2.0f, LMS, 5, nullptr, 0, 10.0f, 3600000, 1000); // Setzt die Parameter für 'filter_analog_1' 
 
 DynamicAdaptiveFilterV2 filter(filter_analog_1);
 
