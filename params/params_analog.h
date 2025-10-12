@@ -1,13 +1,22 @@
 #ifndef PARAMS_ANALOG_H
 #define PARAMS_ANALOG_H
 
+#include <vector>
 #include "DynamicAdaptiveFilterV2.h"
-#include "FIR_coefficients.h"
 
-// Makro zur Erstellung eines FilterConfig-Vektors für analogen Eingang
+// _TRAILER-Makro für FilterConfig-Initialisierung
+#if defined(USE_LMS) || defined(USE_RLS)
+  #define _TRAILER ,0.01f,3.0f  // mu=0.01, madThreshold=3.0
+#elif defined(USE_KALMAN)
+  #define _TRAILER ,0.01f,0.01f,0.01f,3.0f  // Q=0.01, R=0.01, initialState=0.01, madThreshold=3.0
+#else
+  #define _TRAILER ,3.0f  // madThreshold=3.0
+#endif
+
+// Makro für FilterConfig-Vektor
 #define FILTER_ANALOG(pin, threshold, filter_type, length, coeffs, coeffs_len, freq_hz, decay_ms, warmup_ms) \
   std::vector<FilterConfig> filter_analog_##pin = { \
-    {filter_type, length, coeffs, coeffs_len, freq_hz, decay_ms, warmup_ms, threshold, 0.0f, VALUE_MODE} \
+    {filter_type, length, coeffs, coeffs_len, freq_hz, decay_ms, warmup_ms, threshold, 0.0f, VALUE_MODE _TRAILER} \
   }
 
 // Vordefinierte Filter für Szenarien
@@ -36,4 +45,5 @@ const std::vector<FilterConfig> filter_analog_drift = {
 };
 
 #endif
+
 
