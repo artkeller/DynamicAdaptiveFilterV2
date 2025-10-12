@@ -3,7 +3,6 @@
 
 DynamicAdaptiveFilterV2::DynamicAdaptiveFilterV2(const std::vector<FilterConfig>& configs) : _configs(configs) {
   _filters.resize(configs.size());
-  // Initialisierung in begin() verschoben
 }
 
 void DynamicAdaptiveFilterV2::begin() {
@@ -11,12 +10,12 @@ void DynamicAdaptiveFilterV2::begin() {
   digitalWrite(LED_BUILTIN, HIGH);
   for (size_t i = 0; i < _configs.size(); ++i) {
     if (!validateConfig(_configs[i])) {
-      digitalWrite(LED_BUILTIN, LOW); // Fehler anzeigen
-      while (true); // Stoppe bei ungültiger Konfiguration
+      digitalWrite(LED_BUILTIN, LOW);
+      while (true);
     }
     initFilter(_filters[i], _configs[i]);
   }
-  digitalWrite(LED_BUILTIN, LOW); // Initialisierung erfolgreich
+  digitalWrite(LED_BUILTIN, LOW);
 }
 
 bool DynamicAdaptiveFilterV2::validateConfig(const FilterConfig& config) {
@@ -77,7 +76,7 @@ void DynamicAdaptiveFilterV2::initFilter(FilterState& state, const FilterConfig&
 #if defined(USE_LMS)
   else if (config.type == LMS) {
     if (config.mu <= 0) {
-      const_cast<FilterConfig&>(config).mu = 0.01f; // Fallback
+      const_cast<FilterConfig&>(config).mu = 0.01f;
     }
     for (int i = 0; i < config.length; i++) {
       state.coeffs[i] = 0.0f;
@@ -89,7 +88,7 @@ void DynamicAdaptiveFilterV2::initFilter(FilterState& state, const FilterConfig&
 #if defined(USE_RLS)
   else if (config.type == RLS) {
     if (config.lambda <= 0 || config.lambda > 1) {
-      const_cast<FilterConfig&>(config).lambda = 0.9f; // Fallback
+      const_cast<FilterConfig&>(config).lambda = 0.9f;
     }
     for (int i = 0; i < config.length; i++) {
       state.coeffs[i] = 0.0f;
@@ -104,32 +103,28 @@ void DynamicAdaptiveFilterV2::initFilter(FilterState& state, const FilterConfig&
 float DynamicAdaptiveFilterV2::calculateMAD(float* data, int windowSize) {
   if (windowSize <= 0) return 0.0f;
 
-  // Kopiere Daten
   float* temp = new float[windowSize];
-  if (!temp) return 0.0f; // Speicherfehler
+  if (!temp) return 0.0f;
   for (int i = 0; i < windowSize; i++) {
     temp[i] = data[i];
   }
 
-  // Berechne Median
   std::sort(temp, temp + windowSize);
   float median = (windowSize % 2 == 0) ?
     (temp[windowSize/2 - 1] + temp[windowSize/2]) / 2.0f :
     temp[windowSize/2];
 
-  // Berechne absolute Abweichungen
   for (int i = 0; i < windowSize; i++) {
     temp[i] = abs(temp[i] - median);
   }
 
-  // Berechne Median der Abweichungen
   std::sort(temp, temp + windowSize);
   float mad = (windowSize % 2 == 0) ?
     (temp[windowSize/2 - 1] + temp[windowSize/2]) / 2.0f :
     temp[windowSize/2];
 
   delete[] temp;
-  return mad * 1.4826f; // Skalierungsfaktor
+  return mad * 1.4826f;
 }
 
 bool DynamicAdaptiveFilterV2::pushSensorData(const SensorData& data) {
@@ -143,6 +138,9 @@ bool DynamicAdaptiveFilterV2::pushSensorData(const SensorData& data) {
     const FilterConfig& config = _configs[i];
     unsigned long currentTime = data.timestamp == 0 ? millis() : data.timestamp;
     unsigned long deltaT = currentTime > state.lastPushTime ? currentTime - state.lastPushTime : 0;
+    if (deltaT < state.expectedIntervalMs / 2) {
+      continue; // Zu schnelle Daten ignorieren
+    }
     state.lastPushTime = currentTime;
 
     float decayFactor = calculateDecayFactor(state, deltaT);
@@ -176,20 +174,17 @@ bool DynamicAdaptiveFilterV2::pushSensorData(const SensorData& data) {
 #endif
 #if defined(USE_LMS)
     else if (config.type == LMS) {
-      // MAD-basierte Ausreißererkennung
       state.inputBuffer[state.bufferIndex] = value;
       float mad = calculateMAD(state.inputBuffer, config.length);
-      float median = state.inputBuffer[config.length/2]; // Vereinfacht
+      float median = state.inputBuffer[config.length/2];
       if (abs(value - median) > config.madThreshold * mad) {
-        success = false; // Ausreißer ignorieren
+        success = false;
         continue;
       }
 
-      // Dynamische mu-Anpassung
       float dynamicMu = config.mu / (mad + 1e-6f);
       dynamicMu = constrain(dynamicMu, 0.001f, 0.1f);
 
-      // LMS-Berechnung
       float output = 0.0f;
       for (int j = 0; j < config.length; j++) {
         int idx = (state.bufferIndex - j - 1 + config.length) % config.length;
@@ -207,10 +202,9 @@ bool DynamicAdaptiveFilterV2::pushSensorData(const SensorData& data) {
 #endif
 #if defined(USE_RLS)
     else if (config.type == RLS) {
-      // RLS-Implementierung (vereinfacht)
       state.inputBuffer[state.bufferIndex] = value;
       state.bufferIndex = (state.bufferIndex + 1) % config.length;
-      state.filteredValue = value; // Platzhalter
+      state.filteredValue = value;
     }
 #endif
   }
