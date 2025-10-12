@@ -77,7 +77,7 @@ struct SensorData {
 class DynamicAdaptiveFilterV2 {
 public:
   DynamicAdaptiveFilterV2(const std::vector<FilterConfig>& configs);
-  void begin(); // Neue Methode für Initialisierung
+  void begin();
   bool pushSensorData(const SensorData& data);
   std::vector<float> getFilteredValues() const;
   void updateNormalFreq(int channel, float normalFreqHz);
@@ -102,14 +102,14 @@ private:
     FilterMode mode;
     unsigned long startTime;
     unsigned long lastPushTime;
-    float filteredValue;  // Für EMA
-    float baseAlpha;      // Für EMA
-    std::vector<float> history;  // Für SMA/FIR
-    std::vector<float> baseCoeffs;  // Für SMA/FIR
-    volatile unsigned long pulseCount;  // Für COUNT_MODE
+    float filteredValue;
+    float baseAlpha;
+    std::vector<float> history;
+    std::vector<float> baseCoeffs;
+    volatile unsigned long pulseCount;
 #if defined(USE_KALMAN)
-    float P;              // Kovarianz
-    float x;              // Zustand
+    float P;
+    float x;
 #endif
 #if defined(USE_LMS)
     float coeffs[MAX_FILTER_LENGTH];
@@ -120,7 +120,7 @@ private:
     float coeffs[MAX_FILTER_LENGTH];
     float inputBuffer[MAX_FILTER_LENGTH];
     int bufferIndex;
-    float P;              // Kovarianz
+    float P;
 #endif
   };
 
@@ -138,7 +138,7 @@ private:
   void pushToHistory(FilterState& state, float value);
   void initializeHistory(FilterState& state, float value);
   bool isSignificantChange(const FilterState& state, float value) const;
-  float calculateMAD(float* data, int windowSize); // MAD-Berechnung
+  float calculateMAD(float* data, int windowSize);
 };
 
 #endif
