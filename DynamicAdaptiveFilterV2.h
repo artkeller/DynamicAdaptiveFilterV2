@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-#define MAX_FILTER_LENGTH 10 // Maximale Filterlänge für LMS/RLS
+#define MAX_FILTER_LENGTH 5 // Maximale Filterlänge für LMS/RLS
 
 // Makro-Logik: Verhindere Kombinationen von Kalman, LMS und RLS
 #if defined(USE_KALMAN) && defined(USE_LMS)
@@ -22,15 +22,15 @@
 enum FilterType {
   EMA,  // Exponential Moving Average
   SMA,  // Simple Moving Average
-  FIR   // Finite Impulse Response
+  FIR,  // Finite Impulse Response
 #if defined(USE_KALMAN)
-  , KALMAN
+  KALMAN,
 #endif
 #if defined(USE_LMS)
-  , LMS
+  LMS,
 #endif
 #if defined(USE_RLS)
-  , RLS
+  RLS,
 #endif
 };
 
@@ -52,6 +52,7 @@ struct FilterConfig {
   float thresholdPercent;       // Schmitt-Trigger-Threshold (%)
   float deadTimeUs;             // Dead Time (µs, für COUNT_MODE)
   FilterMode mode;              // VALUE_MODE oder COUNT_MODE
+  float madThreshold;           // Schwellwert für MAD (z.B. 3.0)
 #if defined(USE_KALMAN)
   float Q;                      // Prozessrauschen
   float R;                      // Messrauschen
@@ -76,7 +77,8 @@ struct SensorData {
 class DynamicAdaptiveFilterV2 {
 public:
   DynamicAdaptiveFilterV2(const std::vector<FilterConfig>& configs);
-  bool pushSensorData(const SensorData& data); // Änderung: bool-Rückgabe
+  void begin(); // Neue Methode für Initialisierung
+  bool pushSensorData(const SensorData& data);
   std::vector<float> getFilteredValues() const;
   void updateNormalFreq(int channel, float normalFreqHz);
   void updateLength(int channel, int length);
@@ -126,7 +128,7 @@ private:
   std::vector<FilterConfig> _configs;
   String _sensorId;
 
-  bool validateConfig(const FilterConfig& config); // Neu: Validierung
+  bool validateConfig(const FilterConfig& config);
   void initFilter(FilterState& state, const FilterConfig& config);
   void initSMA(FilterState& state, int length);
   void initFIR(FilterState& state, const float* coeffs, int numCoeffs);
@@ -136,6 +138,7 @@ private:
   void pushToHistory(FilterState& state, float value);
   void initializeHistory(FilterState& state, float value);
   bool isSignificantChange(const FilterState& state, float value) const;
+  float calculateMAD(float* data, int windowSize); // Neu: MAD-Berechnung
 };
 
 #endif
