@@ -138,7 +138,7 @@ private:
   void pushToHistory(FilterState& state, float value);
   void initializeHistory(FilterState& state, float value);
   bool isSignificantChange(const FilterState& state, float value) const;
-  float calculateMAD(float* data, int windowSize); // Neu: MAD-Berechnung
+  float calculateMAD(float* data, int windowSize); // MAD-Berechnung
 };
 
 #endif
