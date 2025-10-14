@@ -2,12 +2,11 @@
 #define PARAMS_SENSORS_H
 
 #include "DynamicAdaptiveFilterV2.h"
-#include "filter_chebyshev.h"
-#include "filter_bessel.h"
+#include "filter/filter_coeffients.h"
 
 // Filter-Koeffizienten
 const float chebyshev_lowpass[] = {0.2f, 0.2f, 0.2f, 0.2f, 0.2f}; // Chebyshev Ordnung 2, 5 Taps
-const float bessel_lowpass[] = {0.2f, 0.2f, 0.2f, 0.2f, 0.2f};   // Bessel Ordnung 2, 5 Taps
+const float bessel_lowpass[] = {0.2f, 0.2f, 0.2f, 0.2f, 0.2f};    // Bessel Ordnung 2, 5 Taps
 
 // Temp/Humidity: Sensirion SHT10 (Legacy)
 const std::vector<FilterConfig> filter_sht10 = {
@@ -121,29 +120,29 @@ const std::vector<FilterConfig> filter_bmp390 = {
 const std::vector<FilterConfig> filter_bme280 = {
   {EMA, 10, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE}, // Temperatur (°C), ±0.5°C
   {EMA, 10, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE}, // Feuchte (%), ±3%
-  {SMA, 5, nullptr, 0, 0.5f, 86400000, 5000, 1.0f, 0.0f, VALUE_MODE}  // Druck (hPa), ±1 hPa
+  {SMA, 5, nullptr, 0, 0.5f, 86400000, 5000, 1.0f, 0.0f, VALUE_MODE}   // Druck (hPa), ±1 hPa
 };
 
 // Enviro Combo: Bosch BME680
 const std::vector<FilterConfig> filter_bme680 = {
-  {EMA, 15, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE}, // Temperatur (°C), ±0.5°C
-  {SMA, 10, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE}, // Feuchte (%), ±3%
+  {EMA, 15, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE},          // Temperatur (°C), ±0.5°C
+  {SMA, 10, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE},          // Feuchte (%), ±3%
   {FIR, 0, chebyshev_lowpass, 5, 0.5f, 86400000, 5000, 1.0f, 0.0f, VALUE_MODE}, // Druck (hPa), ±1 hPa
-  {FIR, 0, bessel_lowpass, 5, 1.0f, 86400000, 5000, 10.0f, 0.0f, VALUE_MODE}  // Gas (kOhm), ±10 kOhm
+  {FIR, 0, bessel_lowpass, 5, 1.0f, 86400000, 5000, 10.0f, 0.0f, VALUE_MODE}    // Gas (kOhm), ±10 kOhm
 };
 
 // Enviro Combo: Bosch BME688
 const std::vector<FilterConfig> filter_bme688 = {
-  {EMA, 15, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE}, // Temperatur (°C), ±0.5°C
-  {SMA, 10, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE}, // Feuchte (%), ±3%
+  {EMA, 15, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE},           // Temperatur (°C), ±0.5°C
+  {SMA, 10, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE},           // Feuchte (%), ±3%
   {FIR, 0, chebyshev_lowpass, 5, 0.5f, 86400000, 5000, 1.0f, 0.0f, VALUE_MODE}, // Druck (hPa), ±1 hPa
-  {FIR, 0, bessel_lowpass, 5, 1.0f, 86400000, 5000, 10.0f, 0.0f, VALUE_MODE}  // Gas (kOhm), ±10 kOhm
+  {FIR, 0, bessel_lowpass, 5, 1.0f, 86400000, 5000, 10.0f, 0.0f, VALUE_MODE}    // Gas (kOhm), ±10 kOhm
 };
 
 // Gemeinsam: BME280/680/688 (Temp, Feuchte, Druck)
 const std::vector<FilterConfig> filter_bme = {
-  {EMA, 10, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE}, // Temperatur (°C), ±0.5°C
-  {SMA, 10, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE}, // Feuchte (%), ±3%
+  {EMA, 10, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE},          // Temperatur (°C), ±0.5°C
+  {SMA, 10, nullptr, 0, 0.5f, 86400000, 5000, 2.0f, 0.0f, VALUE_MODE},          // Feuchte (%), ±3%
   {FIR, 0, chebyshev_lowpass, 5, 0.5f, 86400000, 5000, 1.0f, 0.0f, VALUE_MODE}  // Druck (hPa), ±1 hPa
 };
 
@@ -292,9 +291,9 @@ const std::vector<FilterConfig> filter_gps_neo_m8 = {
   {FIR, 0, chebyshev_lowpass, 5, 2.0f, 86400000, 10000, 1.0f, 0.0f, VALUE_MODE}, // Lat (Grad), ±2.5 m
   {FIR, 0, chebyshev_lowpass, 5, 2.0f, 86400000, 10000, 1.0f, 0.0f, VALUE_MODE}, // Lon (Grad)
   {EMA, 10, nullptr, 0, 1.0f, 86400000, 10000, 2.0f, 0.0f, VALUE_MODE},          // Höhe (m), ±5 m
-  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},      // Geschwindigkeit (km/h)
-  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},      // Kurs (Grad)
-  {SMA, 5, nullptr, 0, 2.0f, 86400000, 10000, 0.0f, 0.0f, VALUE_MODE}             // Satellitenanzahl
+  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},    // Geschwindigkeit (km/h)
+  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},    // Kurs (Grad)
+  {SMA, 5, nullptr, 0, 2.0f, 86400000, 10000, 0.0f, 0.0f, VALUE_MODE}            // Satellitenanzahl
 };
 
 // GNSS: u-blox NEO-M9
@@ -302,9 +301,9 @@ const std::vector<FilterConfig> filter_gps_neo_m9 = {
   {FIR, 0, chebyshev_lowpass, 5, 2.0f, 86400000, 10000, 1.0f, 0.0f, VALUE_MODE}, // Lat (Grad), ±2 m
   {FIR, 0, chebyshev_lowpass, 5, 2.0f, 86400000, 10000, 1.0f, 0.0f, VALUE_MODE}, // Lon (Grad)
   {EMA, 10, nullptr, 0, 1.0f, 86400000, 10000, 2.0f, 0.0f, VALUE_MODE},          // Höhe (m), ±3 m
-  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},      // Geschwindigkeit (km/h)
-  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},      // Kurs (Grad)
-  {SMA, 5, nullptr, 0, 2.0f, 86400000, 10000, 0.0f, 0.0f, VALUE_MODE}             // Satellitenanzahl
+  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},    // Geschwindigkeit (km/h)
+  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},    // Kurs (Grad)
+  {SMA, 5, nullptr, 0, 2.0f, 86400000, 10000, 0.0f, 0.0f, VALUE_MODE}            // Satellitenanzahl
 };
 
 // GNSS: u-blox NEO-M10
@@ -312,9 +311,9 @@ const std::vector<FilterConfig> filter_gps_neo_m10 = {
   {FIR, 0, chebyshev_lowpass, 5, 2.0f, 86400000, 10000, 1.0f, 0.0f, VALUE_MODE}, // Lat (Grad), ±2.5 m
   {FIR, 0, chebyshev_lowpass, 5, 2.0f, 86400000, 10000, 1.0f, 0.0f, VALUE_MODE}, // Lon (Grad)
   {EMA, 10, nullptr, 0, 1.0f, 86400000, 10000, 2.0f, 0.0f, VALUE_MODE},          // Höhe (m), ±3–5 m
-  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},      // Geschwindigkeit (km/h)
-  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},      // Kurs (Grad)
-  {SMA, 5, nullptr, 0, 2.0f, 86400000, 10000, 0.0f, 0.0f, VALUE_MODE}             // Satellitenanzahl
+  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},    // Geschwindigkeit (km/h)
+  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},    // Kurs (Grad)
+  {SMA, 5, nullptr, 0, 2.0f, 86400000, 10000, 0.0f, 0.0f, VALUE_MODE}            // Satellitenanzahl
 };
 
 // Gemeinsam: GNSS NEO-M8, NEO-M9, NEO-M10
@@ -322,9 +321,10 @@ const std::vector<FilterConfig> filter_gps_neo = {
   {FIR, 0, chebyshev_lowpass, 5, 2.0f, 86400000, 10000, 1.0f, 0.0f, VALUE_MODE}, // Lat (Grad), ±2–2.5 m
   {FIR, 0, chebyshev_lowpass, 5, 2.0f, 86400000, 10000, 1.0f, 0.0f, VALUE_MODE}, // Lon (Grad)
   {EMA, 10, nullptr, 0, 1.0f, 86400000, 10000, 2.0f, 0.0f, VALUE_MODE},          // Höhe (m), ±3–5 m
-  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},      // Geschwindigkeit (km/h)
-  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},      // Kurs (Grad)
-  {SMA, 5, nullptr, 0, 2.0f, 86400000, 10000, 0.0f, 0.0f, VALUE_MODE}             // Satellitenanzahl
+  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},    // Geschwindigkeit (km/h)
+  {FIR, 0, bessel_lowpass, 5, 10.0f, 3600000, 10000, 5.0f, 0.0f, VALUE_MODE},    // Kurs (Grad)
+  {SMA, 5, nullptr, 0, 2.0f, 86400000, 10000, 0.0f, 0.0f, VALUE_MODE}            // Satellitenanzahl
 };
+
 
 #endif
