@@ -1,4 +1,4 @@
-# params.md – Vordefinierte Sensorkonfigurationen
+# PARAMS.md – Vordefinierte Sensorkonfigurationen
 
 Diese Datei beschreibt vordefinierte Filterparameter (`FilterConfig`) für eine Auswahl gängiger Sensoren.
 Jede Konfiguration ist direkt einsatzbereit und kann ohne tiefes Wissen über Filtertheorie verwendet werden.
