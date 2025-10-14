@@ -45,7 +45,7 @@ Für die ersten drei Filtertypen gibt es jeweils drei Ordnungen:
 
 * **Merkmale:**
 
-  * Lässt nützliche Signale durch, dämpft aber Rauschen.
+  * Lässt Nutzsignale durch, dämpft aber Rauschen.
   * Hat eine leichte Welligkeit („Ripple“) im Durchlassbereich (hier 0.5 dB).
   * Ideal, wenn ein guter Kompromiss zwischen Reaktionsgeschwindigkeit und Glättung gesucht wird.
 
@@ -182,7 +182,7 @@ FilterConfig imu_filter = {
 
 ---
 
-## Zusammenfassung
+## Praktischer Nutzen
 
 * Die Datei `filter_coefficients.h` liefert fertige, getestete FIR-Koeffizienten.
 * Sie erleichtert die Arbeit für Entwickler, die keinen eigenen Filterentwurf machen wollen.
@@ -193,4 +193,4 @@ FilterConfig imu_filter = {
   * **Butterworth:** maximale Glättung für stabile Anzeigen.
   * **Notch:** gezielte Unterdrückung von 50 Hz Netzbrummen.
 
-So kannst du sofort funktionierende Filter in deinem Projekt einsetzen, ohne komplexe DSP-Berechnungen durchzuführen.
+So könnwn sofort funktionierende Filter im Projekt eingesetz werden, ohne komplexe DSP-Berechnungen durchzuführen.
