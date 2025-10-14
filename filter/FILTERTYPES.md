@@ -323,7 +323,7 @@ struct FilterConfig {
 Die Bibliothek berücksichtigt unregelmäßige Abtastraten durch `calculateDecayFactor(state, deltaT)`:
 
 * `deltaT <= expectedIntervalMs` → `decayFactor = 1.0` (normales Verhalten)
-* `deltaT >= maxDecayTimeMs` → `decayFactor = 0.0` (alter Einflüsse werden verworfen)
+* `deltaT >= maxDecayTimeMs` → `decayFactor = 0.0` (alte Einflüsse werden verworfen)
 * sonst linear interpoliert zwischen 1 und 0.
 
 **Auswirkung:**
