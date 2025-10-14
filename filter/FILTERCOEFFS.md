@@ -194,3 +194,5 @@ FilterConfig imu_filter = {
   * **Notch:** gezielte Unterdrückung von 50 Hz Netzbrummen.
 
 So könnwn sofort funktionierende Filter im Projekt eingesetz werden, ohne komplexe DSP-Berechnungen durchzuführen.
+
+---
