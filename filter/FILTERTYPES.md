@@ -329,7 +329,7 @@ Die Bibliothek berücksichtigt unregelmäßige Abtastraten durch `calculateDecay
 **Auswirkung:**
 
 * Bei langen Pausen wird der Filter responsiver auf den nächsten Messwert. Das verhindert extrem träges Verhalten nach Kommunikationsausfällen.
-* Für FIR/SMA: Vergangene Koeffizienten werden skaliert und der Restgewich auf das neueste Sample umgeleitet, so bleibt die Filterausgabe normalisiert.
+* Für FIR/SMA: Vergangene Koeffizienten werden skaliert und das Restgewicht auf das neueste Sample umgeleitet, so bleibt die Filterausgabe normalisiert.
 
 ---
 
