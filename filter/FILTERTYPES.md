@@ -396,7 +396,7 @@ Die Bibliothek berücksichtigt unregelmäßige Abtastraten durch `calculateDecay
 
 * **Nicht mehrere adaptive Filtertypen gleichzeitig kompilieren:** Header stellt preprocessor-Fehler sicher (nur `USE_KALMAN` **oder** `USE_LMS` **oder** `USE_RLS`).
 * **Korrekte Initialisierung:** Bei FIR/SMA immer `warmUpTimeMs` beachten oder `initializeHistory()` verwenden, damit erste Ausgaben sinnvoll sind.
-* **Normalization der FIR-Koeffizienten:** Prüfe, dass Sum(coeffs) ≈ 1, wenn du DC-Gain = 1 erwartest.
+* **Normalization der FIR-Koeffizienten:** Prüfung, ob Sum(coeffs) ≈ 1, wenn DC-Gain = 1 erwartet wird.
 * **Dead-Time-Korrektur (GM):** Die im Code implementierte Korrektur teilt durch `(1 - cps * deadTime)` (approx.); bei sehr hohen Raten kann Korrektur numerisch unsicher werden.
 * **Maximale Anzahl adaptive Koeffizienten:** LMS/RLS benutzen statische Arrays `MAX_FILTER_LENGTH` — definiere diesen Wert passend.
 
