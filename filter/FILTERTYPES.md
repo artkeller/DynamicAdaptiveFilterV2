@@ -398,14 +398,14 @@ Die Bibliothek berücksichtigt unregelmäßige Abtastraten durch `calculateDecay
 * **Korrekte Initialisierung:** Bei FIR/SMA immer `warmUpTimeMs` beachten oder `initializeHistory()` verwenden, damit erste Ausgaben sinnvoll sind.
 * **Normalization der FIR-Koeffizienten:** Prüfung, ob Sum(coeffs) ≈ 1, wenn DC-Gain = 1 erwartet wird.
 * **Dead-Time-Korrektur (GM):** Die im Code implementierte Korrektur teilt durch `(1 - cps * deadTime)` (approx.); bei sehr hohen Raten kann Korrektur numerisch unsicher werden.
-* **Maximale Anzahl adaptive Koeffizienten:** LMS/RLS benutzen statische Arrays `MAX_FILTER_LENGTH` — definiere diesen Wert passend.
+* **Maximale Anzahl adaptive Koeffizienten:** LMS/RLS benutzen statische Arrays `MAX_FILTER_LENGTH` —  diesen Wert anpassen. 
 
 ---
 
 ## Weiteres Vorgehen
 
-* Visualisiere Eingangssignal, gefiltertes Signal und Fehler (z. B. in Python/Matplotlib) um Parameter zu verfeinern.
-* Bei unsicherer Wahl: starte mit EMA (einfach) und messe Performance/Qualität; wechsele zu FIR/Kalman/LMS wenn spektrale/Modellanforderungen dies verlangen.
+* Eingangssignal visualisieren, um gefiltertes Signal und Fehler (z. B. in Python/Matplotlib) um Parameter zu verfeinern.
+* Bei unsicherer Wahl: mit EMA (einfach) starten und Performance/Qualität messen; zu FIR/Kalman/LMS wechseln, wenn spektrale/Modellanforderungen dies verlangen.
 
 ---
 
