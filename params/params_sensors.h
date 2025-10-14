@@ -2,7 +2,7 @@
 #define PARAMS_SENSORS_H
 
 #include "DynamicAdaptiveFilterV2.h"
-#include "filter/filter_coeffients.h"
+#include "filter/FIR_coefficients.h"
 
 // Filter-Koeffizienten
 const float chebyshev_lowpass[] = {0.2f, 0.2f, 0.2f, 0.2f, 0.2f}; // Chebyshev Ordnung 2, 5 Taps
@@ -328,3 +328,4 @@ const std::vector<FilterConfig> filter_gps_neo = {
 
 
 #endif
+
