@@ -1,7 +1,7 @@
 # DynamicAdaptiveFilterV2 *** IN PROGRESS --- EXAMPLES BELONG TO EARLIER VERSION ****
 
 [![CRA Status](https://img.shields.io/badge/CRA-Exempt%20(pure%20OSS)-informational)](./CRA-EXEMPTION.md)
-[![Attention – Alpha Version](https://img.shields.io/badge/Vorsicht-Alpha%20Version-red?style=flat-square)](https://github.com/dein-benutzer/dein-repo#readme)
+[![Attention – Alpha Version](https://img.shields.io/badge/Attention-Alpha%20Version-red?style=flat-square)](https://github.com/dein-benutzer/dein-repo#readme)
 
 DynamicAdaptiveFilterV2 is a versatile Arduino/C++ library for **real-time filtering and smoothing of sensor data and analog signals**.
 It supports adaptive filters such as EMA, SMA, and FIR and is ideal for projects that require processing of **noisy, irregular, or impulse-like signals**, e.g., environmental sensors (BME680, SHT31), potentiometers, or voltage measurements (Vbus/Vcc).
